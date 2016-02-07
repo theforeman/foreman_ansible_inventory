@@ -144,9 +144,11 @@ class ForemanInventory(object):
             return {}
 
         hostgroup = self._get_hostgroup_by_id(hid)
-        ancestry = hostgroup.get('ancestry', '').split('/')
-        # Append top level hostgroup last to overwrite lower
-        # level values
+        ancestry_path = hostgroup.get('ancestry', '')
+        ancestry = ancestry_path.split('/') if ancestry_path is not None else []
+
+        # Append top level hostgroup last to overwrite lower level
+        # values
         ancestry.append(hid)
         params = {}
 
