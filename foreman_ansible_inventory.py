@@ -119,9 +119,11 @@ class ForemanInventory(object):
         self.args = parser.parse_args()
 
     def _get_json(self, url):
-        return requests.get(url,
-                            auth=HTTPBasicAuth(self.foreman_user, self.foreman_pw),
-                            verify=self.foreman_ssl_verify).json()
+        ret = requests.get(url,
+                           auth=HTTPBasicAuth(self.foreman_user, self.foreman_pw),
+                           verify=self.foreman_ssl_verify)
+        ret.raise_for_status()
+        return ret.json()
 
     def _get_hosts(self):
         return self._get_json("%s/api/v2/hosts" % self.foreman_url)['results']
