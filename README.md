@@ -6,8 +6,49 @@ The connection parameters are set up via a configuration
 file *foreman.ini* that resides in the same dir as the
 inventory script.
 
+## Variables and Parameters
+
 The data returned from Foreman for each host is stored in a foreman
-hash so they're available as *host_vars*.
+hash so they're available as *host_vars* along with the parameters
+of the host and it's hostgroups:
+
+     "foo.example.com": {
+        "foreman": {
+          "architecture_id": 1,
+          "architecture_name": "x86_64",
+          "build": false,
+          "build_status": 0,
+          "build_status_label": "Installed",
+          "capabilities": [
+            "build",
+            "image"
+          ],
+          "compute_profile_id": 4,
+          "hostgroup_name": "webtier/myapp",
+          "id": 70,
+          "image_name": "debian8.1",
+          ...
+          "uuid": "50197c10-5ebb-b5cf-b384-a1e203e19e77"
+        },
+        "foreman_params": {
+          "testparam1": "foobar",
+          "testparam2": "small",
+          ...
+        }
+
+and could therefore be used in ansible like:
+
+    - debug: msg="From Foreman host {{ foreman['uuid'] }}"
+
+Which yields
+
+    TASK [test_foreman : debug] ****************************************************
+    ok: [foo.example.com] => {
+    "msg": "From Foreman host 50190bd1-052a-a34a-3c9c-df37a39550bf"
+    }
+
+
+## Hostgroups
 
 The hostgroup of each host is created as ansible group with
 a foreman prefix, all lowercase and problematic parameters removed. So
@@ -36,7 +77,7 @@ and each of the hostgroups defines a parameters respectively:
 then *group_patterns* like:
 
     [ansible]
-	group_patterns = ["{app_param}-{tier_param}-{dc_param}",
+    group_patterns = ["{app_param}-{tier_param}-{dc_param}",
                       "{app_param}-{tier_param}",
                       "{app_param}"]
 
