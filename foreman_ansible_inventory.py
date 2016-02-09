@@ -37,6 +37,7 @@ class ForemanInventory(object):
         """ Main execution path """
         self.inventory = dict()  # A list of groups and the hosts in that group
         self.cache = dict()  # Details about hosts in the inventory
+        self.params = dict() # Params of each host
         self.hostgroups = dict()  # host groups
 
         # Read settings and parse CLI arguments
@@ -60,7 +61,10 @@ class ForemanInventory(object):
         else:
             self.inventory['_meta'] = {'hostvars': {}}
             for hostname in self.cache:
-                self.inventory['_meta']['hostvars'][hostname] = {'foreman': self.cache[hostname] }
+                self.inventory['_meta']['hostvars'][hostname] = {
+                    'foreman': self.cache[hostname],
+                    'foreman_params': self.params[hostname],
+                }
             data_to_print += self.json_format_dict(self.inventory, True)
 
         print(data_to_print)
@@ -72,7 +76,8 @@ class ForemanInventory(object):
             mod_time = os.path.getmtime(self.cache_path_cache)
             current_time = time()
             if (mod_time + self.cache_max_age) > current_time:
-                if os.path.isfile(self.cache_path_inventory):
+                if (os.path.isfile(self.cache_path_inventory) and
+                    os.path.osfile(self.cache_path_params)):
                     return True
         return False
 
@@ -106,6 +111,7 @@ class ForemanInventory(object):
         (script, ext) = os.path.splitext(os.path.basename(__file__))
         self.cache_path_cache = cache_path + "/%s.cache" % script
         self.cache_path_inventory = cache_path + "/%s.index" % script
+        self.cache_path_params = cache_path + "/%s.params" % script
         self.cache_max_age = config.getint('cache', 'max_age')
 
     def parse_cli_args(self):
@@ -134,26 +140,33 @@ class ForemanInventory(object):
             self.hostgroups[hid] = self._get_json(url)
         return self.hostgroups[hid]
 
+    def _get_params_by_id(self, hid):
+        url = "%s/api/v2/hosts/%s/parameters" % (self.foreman_url, hid)
+        return self._get_json(url)['results']
+
     def _resolve_params(self, host):
         """
         Resolve all host group params of the host using the top level
         hostgroup and the ancestry.
         """
-        hid = host['hostgroup_id']
-        if not hid:
-            return {}
-
-        hostgroup = self._get_hostgroup_by_id(hid)
-        ancestry_path = hostgroup.get('ancestry', '')
-        ancestry = ancestry_path.split('/') if ancestry_path is not None else []
-
-        # Append top level hostgroup last to overwrite lower level
-        # values
-        ancestry.append(hid)
+        hostgroup_id = host['hostgroup_id']
+        paramgroups = []
         params = {}
 
-        for hid in ancestry:
-            for param in self._get_hostgroup_by_id(hid)['parameters']:
+        if hostgroup_id:
+            hostgroup = self._get_hostgroup_by_id(hostgroup_id)
+            ancestry_path = hostgroup.get('ancestry', '')
+            ancestry = ancestry_path.split('/') if ancestry_path is not None else []
+
+            # Append top level hostgroup last to overwrite lower levels
+            # values
+            ancestry.append(hostgroup_id)
+            paramgroups = [self._get_hostgroup_by_id(hostgroup_id)['parameters']
+                           for hostgroup_id in ancestry]
+
+        paramgroups += [self._get_params_by_id(host['id'])]
+        for paramgroup in paramgroups:
+            for param in paramgroup:
                 name = param['name']
                 params[name] = param['value']
 
@@ -184,10 +197,12 @@ class ForemanInventory(object):
                     pass  # Host not part of this group
 
             self.cache[dns_name] = host
+            self.params[dns_name] = params
             self.push(self.inventory, 'all', dns_name)
 
         self.write_to_cache(self.cache, self.cache_path_cache)
         self.write_to_cache(self.inventory, self.cache_path_inventory)
+        self.write_to_cache(self.params, self.cache_path_params)
 
     def get_host_info(self):
         """ Get variables about a specific host """
@@ -218,6 +233,13 @@ class ForemanInventory(object):
         cache = open(self.cache_path_inventory, 'r')
         json_inventory = cache.read()
         self.inventory = json.loads(json_inventory)
+
+    def load_params_from_cache(self):
+        """ Reads the index from the cache file sets self.index """
+
+        cache = open(self.cache_path_params, 'r')
+        json_params = cache.read()
+        self.params = json.loads(json_params)
 
     def load_cache_from_cache(self):
         """ Reads the cache from the cache file sets self.cache """
