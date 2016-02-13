@@ -181,10 +181,12 @@ class ForemanInventory(object):
         for host in self._get_hosts():
             dns_name = host['name']
 
-            hostgroup = host.get('hostgroup_name')
-            if hostgroup:
-                hkey = self.to_safe('foreman_' + hostgroup.lower())
-                self.push(self.inventory, hkey, dns_name)
+            # Create ansible groups for hostgroup, location and organization
+            for group in ['hostgroup', 'location', 'organization']:
+                val = host.get('%s_name' % group)
+                if val:
+                    safe_key = self.to_safe('foreman_%s_%s' % (group, val.lower()))
+                    self.push(self.inventory, safe_key, dns_name)
 
             # Ansible groups by parameters in host groups based
             # on group_patterns in config
