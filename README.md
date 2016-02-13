@@ -48,17 +48,17 @@ Which yields
     }
 
 
-## Hostgroups
+## Automatic ansible groups
 
-The hostgroup of each host is created as ansible group with
-a foreman prefix, all lowercase and problematic parameters removed. So
-e.g. the foreman hostgroup
+The hostgroup, location and organization of each host is created as
+ansible group with a foreman_<grouptype> prefix, all lowercase and
+problematic parameters removed. So e.g. the foreman hostgroup
 
     myapp / webtier / datacenter1
 
 would turn into the ansible group:
 
-    foreman_myapp_webtier_datacenter1
+    foreman_hostgroup_myapp_webtier_datacenter1
 
 Furthermore groups can be created on the fly using the
 *group_patterns* variable in *foreman.ini* so that you can build up
