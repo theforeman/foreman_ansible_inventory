@@ -22,32 +22,6 @@ import subprocess
 from setuptools import setup, find_packages
 import os
 
-
-def fetch_version():
-    """Get version from debian changelog and write it to gbp/version.py"""
-    version = "0.0"
-
-    try:
-        popen = subprocess.Popen('dpkg-parsechangelog', stdout=subprocess.PIPE)
-        out, ret = popen.communicate()
-        for line in out.decode('utf-8').split('\n'):
-            if line.startswith('Version:'):
-                version = line.split(' ')[1].strip()
-                break
-    except OSError:
-        pass # Failing is fine, we just can't print the version then
-
-    with open('gbp/version.py', 'w') as f:
-        f.write('"The current gbp version number"\n')
-        f.write('gbp_version="%s"\n' % version)
-
-    return version
-
-
-def readme():
-    with open('README') as file:
-        return file.read()
-
 setup(name = "foreman_ansible_inventory",
       version = "0.0.1",
       author = u'Guido Günther',
