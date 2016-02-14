@@ -1,6 +1,7 @@
 *~
 *.index
 *.cache
+*.params
 build/
 dist/
 *.egg-info/
