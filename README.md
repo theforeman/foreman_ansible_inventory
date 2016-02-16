@@ -3,8 +3,8 @@ foreman_ansible_inventory
 
 This script can be used as an ansible dynamic inventory[1].
 The connection parameters are set up via a configuration
-file *foreman.ini* that resides in the same dir as the
-inventory script.
+file *foreman.ini* that resides in the same directory as the inventory
+script.
 
 ## Variables and Parameters
 
@@ -81,14 +81,14 @@ then *group_patterns* like:
                       "{app_param}-{tier_param}",
                       "{app_param}"]
 
-would put the host into the additional anisble groups:
+would put the host into the additional ansible groups:
 
     - myapp-webtier-datacenter1
     - myapp-webtier
     - myapp
 
-by reursively resolving the hostgroups, getting the parameter keys and
-values performing doing a Python *string.format()* like replacement on
+by recursively resolving the hostgroups, getting the parameter keys
+and values and doing a Python *string.format()* like replacement on
 it.
 
 [1]: http://docs.ansible.com/intro_dynamic_inventory.html
