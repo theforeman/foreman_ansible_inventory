@@ -77,7 +77,7 @@ class ForemanInventory(object):
             current_time = time()
             if (mod_time + self.cache_max_age) > current_time:
                 if (os.path.isfile(self.cache_path_inventory) and
-                    os.path.osfile(self.cache_path_params)):
+                    os.path.isfile(self.cache_path_params)):
                     return True
         return False
 
