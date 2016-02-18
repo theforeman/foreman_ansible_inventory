@@ -51,6 +51,7 @@ class ForemanInventory(object):
             self.update_cache()
         else:
             self.load_inventory_from_cache()
+            self.load_params_from_cache()
             self.load_cache_from_cache()
 
         data_to_print = ""
