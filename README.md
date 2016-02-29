@@ -60,9 +60,9 @@ would turn into the ansible group:
 
     foreman_hostgroup_myapp_webtier_datacenter1
 
-Furthermore groups can be created on the fly using the
+Furthermore ansible groups can be created on the fly using the
 *group_patterns* variable in *foreman.ini* so that you can build up
-hierarchies using parameters on the hostgroup.
+hierarchies using parameters on the hostgroup and host variables.
 
 Lets assume you have a host that is built using this nested hostgroup:
 
@@ -72,20 +72,23 @@ and each of the hostgroups defines a parameters respectively:
 
     myapp: app_param = myapp
     webtier: tier_param = webtier
-	datacenter1: dc_param = datacenter1
+    datacenter1: dc_param = datacenter1
 
+The host is also in a subnet called "mysubnet" and provisioned via an image
 then *group_patterns* like:
 
     [ansible]
     group_patterns = ["{app_param}-{tier_param}-{dc_param}",
                       "{app_param}-{tier_param}",
-                      "{app_param}"]
+                      "{app_param}",
+                      "{subnet_name}-{provision_method}"]
 
 would put the host into the additional ansible groups:
 
     - myapp-webtier-datacenter1
     - myapp-webtier
     - myapp
+    - mysubnet-image
 
 by recursively resolving the hostgroups, getting the parameter keys
 and values and doing a Python *string.format()* like replacement on

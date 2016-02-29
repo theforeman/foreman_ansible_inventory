@@ -20,6 +20,7 @@
 
 import argparse
 import ConfigParser
+import copy
 import os
 import re
 from time import time
@@ -196,12 +197,21 @@ class ForemanInventory(object):
                     safe_key = self.to_safe('foreman_%s_%s' % (group, val.lower()))
                     self.push(self.inventory, safe_key, dns_name)
 
-            # Ansible groups by parameters in host groups based
-            # on group_patterns in config
             params = self._resolve_params(host)
+
+            # Ansible groups by parameters in host groups and Foreman host
+            # attributes.
+            groupby = copy.copy(params)
+            for k, v in host.items():
+                if isinstance(v, basestring):
+                    groupby[k] = self.to_safe(v)
+                elif isinstance(v, int):
+                    groupby[k] = v
+
+            # The name of the ansible groups is given by group_patterns:
             for pattern in self.group_patterns:
                 try:
-                    key = pattern.format(**params)
+                    key = pattern.format(**groupby)
                     self.push(self.inventory, key, dns_name)
                 except KeyError:
                     pass  # Host not part of this group
