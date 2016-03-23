@@ -23,7 +23,7 @@ from setuptools import setup, find_packages
 import os
 
 setup(name = "foreman_ansible_inventory",
-      version = "0.0.1",
+      version = "0.0.3",
       author = u'Guido Günther',
       author_email = 'agx@sigxcpu.org',
       description = 'Ansible dynamic inventory that queries the Foreman',
