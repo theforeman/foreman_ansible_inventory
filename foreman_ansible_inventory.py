@@ -107,7 +107,7 @@ class ForemanInventory(object):
 
         # Cache related
         try:
-            cache_path = config.get('cache', 'path')
+            cache_path = os.path.expanduser(config.get('cache', 'path'))
         except (ConfigParser.NoOptionError, ConfigParser.NoSectionError):
             cache_path = '.'
         (script, ext) = os.path.splitext(os.path.basename(__file__))
