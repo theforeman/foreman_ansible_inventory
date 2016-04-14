@@ -3,8 +3,12 @@ foreman_ansible_inventory
 
 This script can be used as an ansible dynamic inventory[1].
 The connection parameters are set up via a configuration
-file *foreman.ini* that resides in the same directory as the inventory
-script.
+file *foreman.ini*. *foreman.ini* is found using the following
+order of discovery.
+
+    * `/etc/ansible/foreman.ini`
+    * Current directory of your inventory script.
+    * `FOREMAN_INI_PATH` environment variable.
 
 ## Variables and Parameters
 

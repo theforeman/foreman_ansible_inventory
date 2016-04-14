@@ -87,9 +87,16 @@ class ForemanInventory(object):
         """ Reads the settings from the foreman.ini file """
 
         config = ConfigParser.SafeConfigParser()
-        config.read(
-            ["/etc/ansible/foreman.ini",
-             os.path.dirname(os.path.realpath(__file__)) + '/foreman.ini'])
+        config_paths = [
+            "/etc/ansible/foreman.ini",
+            os.path.dirname(os.path.realpath(__file__)) + '/foreman.ini',
+        ]
+
+        env_value = os.environ.get('FOREMAN_INI_PATH')
+        if env_value is not None:
+            config_paths.append(os.path.expanduser(os.path.expandvars(env_value)))
+
+        config.read(config_paths)
 
         # Foreman API related
         self.foreman_url = config.get('foreman', 'url')
