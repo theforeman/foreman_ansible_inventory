@@ -133,7 +133,7 @@ class ForemanInventory(object):
                             help='Force refresh of cache by making API requests to foreman (default: False - use cache files)')
         self.args = parser.parse_args()
 
-    def _get_json(self, url):
+    def _get_json(self, url, ignore_errors=None):
         page = 1
         results = []
         while True:
@@ -141,6 +141,8 @@ class ForemanInventory(object):
                                auth=HTTPBasicAuth(self.foreman_user, self.foreman_pw),
                                verify=self.foreman_ssl_verify,
                                params={'page': page, 'per_page': 250})
+            if ignore_errors and ret.status_code in ignore_errors:
+                break
             ret.raise_for_status()
             json = ret.json()
             if not json.has_key('results'):
@@ -162,7 +164,7 @@ class ForemanInventory(object):
 
     def _get_params_by_id(self, hid):
         url = "%s/api/v2/hosts/%s/parameters" % (self.foreman_url, hid)
-        return self._get_json(url)
+        return self._get_json(url, [404])
 
     def _resolve_params(self, host):
         """
