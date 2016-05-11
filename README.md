@@ -1,7 +1,7 @@
 foreman_ansible_inventory
 =========================
 
-This script can be used as an ansible dynamic inventory[1].
+This script can be used as an Ansible dynamic inventory[1].
 The connection parameters are set up via a configuration
 file *foreman.ini*. *foreman.ini* is found using the following
 order of discovery.
@@ -40,7 +40,7 @@ of the host and it's hostgroups:
           ...
         }
 
-and could therefore be used in ansible like:
+and could therefore be used in Ansible like:
 
     - debug: msg="From Foreman host {{ foreman['uuid'] }}"
 
@@ -51,20 +51,24 @@ Which yields
     "msg": "From Foreman host 50190bd1-052a-a34a-3c9c-df37a39550bf"
     }
 
+## Automatic Ansible groups
 
-## Automatic ansible groups
+The inventory will provide a set of groups, by default prefixed by
+'foreman_'. If you want to customize this prefix, change the
+group_prefix option in /etc/ansible/foreman.ini. The rest of this
+guide will assume the default prefix of 'foreman'
 
-The hostgroup, location and organization of each host is created as
-ansible group with a foreman_<grouptype> prefix, all lowercase and
+The hostgroup, location and organization of each host are created as
+Ansible groups with a foreman_<grouptype> prefix, all lowercase and
 problematic parameters removed. So e.g. the foreman hostgroup
 
     myapp / webtier / datacenter1
 
-would turn into the ansible group:
+would turn into the Ansible group:
 
     foreman_hostgroup_myapp_webtier_datacenter1
 
-Furthermore ansible groups can be created on the fly using the
+Furthermore Ansible groups can be created on the fly using the
 *group_patterns* variable in *foreman.ini* so that you can build up
 hierarchies using parameters on the hostgroup and host variables.
 
@@ -87,7 +91,7 @@ then *group_patterns* like:
                       "{app_param}",
                       "{subnet_name}-{provision_method}"]
 
-would put the host into the additional ansible groups:
+would put the host into the additional Ansible groups:
 
     - myapp-webtier-datacenter1
     - myapp-webtier
