@@ -112,6 +112,11 @@ class ForemanInventory(object):
 
         self.group_patterns = eval(group_patterns)
 
+        try:
+            self.group_prefix = config.get('ansible', 'group_prefix')
+        except (ConfigParser.NoOptionError, ConfigParser.NoSectionError):
+            self.group_prefix = "foreman_"
+
         # Cache related
         try:
             cache_path = os.path.expanduser(config.get('cache', 'path'))
@@ -207,7 +212,7 @@ class ForemanInventory(object):
             for group in ['hostgroup', 'location', 'organization']:
                 val = host.get('%s_name' % group)
                 if val:
-                    safe_key = self.to_safe('foreman_%s_%s' % (group, val.lower()))
+                    safe_key = self.to_safe('%s%s_%s' % (self.group_prefix, group, val.lower()))
                     self.push(self.inventory, safe_key, dns_name)
 
             params = self._resolve_params(host)
@@ -302,3 +307,4 @@ class ForemanInventory(object):
             return json.dumps(data)
 
 ForemanInventory()
+
