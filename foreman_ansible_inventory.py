@@ -39,6 +39,7 @@ class ForemanInventory(object):
         self.inventory = dict()  # A list of groups and the hosts in that group
         self.cache = dict()  # Details about hosts in the inventory
         self.params = dict() # Params of each host
+        self.facts = dict() # Facts of each host
         self.hostgroups = dict()  # host groups
 
         # Read settings and parse CLI arguments
@@ -53,6 +54,7 @@ class ForemanInventory(object):
         else:
             self.load_inventory_from_cache()
             self.load_params_from_cache()
+            self.load_facts_from_cache()
             self.load_cache_from_cache()
 
         data_to_print = ""
@@ -66,6 +68,7 @@ class ForemanInventory(object):
                 self.inventory['_meta']['hostvars'][hostname] = {
                     'foreman': self.cache[hostname],
                     'foreman_params': self.params[hostname],
+                    'foreman_facts': self.facts[hostname],
                 }
             data_to_print += self.json_format_dict(self.inventory, True)
 
@@ -79,7 +82,8 @@ class ForemanInventory(object):
             current_time = time()
             if (mod_time + self.cache_max_age) > current_time:
                 if (os.path.isfile(self.cache_path_inventory) and
-                    os.path.isfile(self.cache_path_params)):
+                    os.path.isfile(self.cache_path_params) and
+                    os.path.isfile(self.cache_path_facts)):
                     return True
         return False
 
@@ -126,6 +130,7 @@ class ForemanInventory(object):
         self.cache_path_cache = cache_path + "/%s.cache" % script
         self.cache_path_inventory = cache_path + "/%s.index" % script
         self.cache_path_params = cache_path + "/%s.params" % script
+        self.cache_path_facts = cache_path + "/%s.facts" % script
         self.cache_max_age = config.getint('cache', 'max_age')
 
     def parse_cli_args(self):
@@ -152,6 +157,8 @@ class ForemanInventory(object):
             json = ret.json()
             if not json.has_key('results'):
                 return json
+            if type(json['results']) == type({}):
+                return json['results']
             results = results + json['results']
             if len(results) >= json['total']:
                 break
@@ -170,6 +177,10 @@ class ForemanInventory(object):
     def _get_params_by_id(self, hid):
         url = "%s/api/v2/hosts/%s/parameters" % (self.foreman_url, hid)
         return self._get_json(url, [404])
+
+    def _get_facts_by_id(self, hid):
+        url = "%s/api/v2/hosts/%s/facts" % (self.foreman_url, hid)
+        return self._get_json(url)
 
     def _resolve_params(self, host):
         """
@@ -198,6 +209,19 @@ class ForemanInventory(object):
                 params[name] = param['value']
 
         return params
+
+    def _get_facts(self, host):
+        """
+        Fetch all host facts of the host
+        """
+        ret = self._get_facts_by_id(host['id'])
+        if len(ret.values()) == 0:
+            facts = {}
+        elif len(ret.values()) == 1:
+            facts = ret.values()[0]
+        else:
+            raise ValueError("More than one set of facts returned for '%s'" % host)
+        return facts
 
     def update_cache(self):
         """Make calls to foreman and save the output in a cache"""
@@ -236,11 +260,13 @@ class ForemanInventory(object):
 
             self.cache[dns_name] = host
             self.params[dns_name] = params
+            self.facts[dns_name] = self._get_facts(host)
             self.push(self.inventory, 'all', dns_name)
 
         self.write_to_cache(self.cache, self.cache_path_cache)
         self.write_to_cache(self.inventory, self.cache_path_inventory)
         self.write_to_cache(self.params, self.cache_path_params)
+        self.write_to_cache(self.facts, self.cache_path_facts)
 
     def get_host_info(self):
         """ Get variables about a specific host """
@@ -278,6 +304,13 @@ class ForemanInventory(object):
         cache = open(self.cache_path_params, 'r')
         json_params = cache.read()
         self.params = json.loads(json_params)
+
+    def load_facts_from_cache(self):
+        """ Reads the index from the cache file sets self.index """
+
+        cache = open(self.cache_path_facts, 'r')
+        json_facts = cache.read()
+        self.facts = json.loads(json_facts)
 
     def load_cache_from_cache(self):
         """ Reads the cache from the cache file sets self.cache """
