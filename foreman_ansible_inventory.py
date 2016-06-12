@@ -108,11 +108,6 @@ class ForemanInventory(object):
         self.foreman_pw = config.get('foreman', 'password')
         self.foreman_ssl_verify = config.getboolean('foreman', 'ssl_verify')
 
-        if config.has_option('foreman', 'server_param_resolution'):
-            self.foreman_server_param_resolution = config.getboolean('foreman', 'server_param_resolution')
-        else:
-            self.foreman_server_param_resolution = False
-
         # Ansible related
         try:
             group_patterns = config.get('ansible', 'group_patterns')
@@ -179,14 +174,9 @@ class ForemanInventory(object):
             self.hostgroups[hid] = self._get_json(url)
         return self.hostgroups[hid]
 
-    def _get_params_by_id(self, hid):
-        if not self.foreman_server_param_resolution:
-            url = "%s/api/v2/hosts/%s/parameters" % (self.foreman_url, hid)
-            return self._get_json(url, [404])
-        else:
-            url = "%s/api/v2/hosts/%s" % (self.foreman_url, hid)
-            host = self._get_json(url, [404])
-            return host["all_parameters"] if "all_parameters" in host.keys() else {}
+    def _get_all_params_by_id(self, hid):
+        url = "%s/api/v2/hosts/%s" % (self.foreman_url, hid)
+        return self._get_json(url, [404]).get('all_parameters', {})
 
     def _get_facts_by_id(self, hid):
         url = "%s/api/v2/hosts/%s/facts" % (self.foreman_url, hid)
@@ -194,30 +184,13 @@ class ForemanInventory(object):
 
     def _resolve_params(self, host):
         """
-        Resolve all host group params of the host using the top level
-        hostgroup and the ancestry.
+        Fetch host params and convert to dict
         """
-        paramgroups = []
         params = {}
 
-        if not self.foreman_server_param_resolution:
-            hostgroup_id = host['hostgroup_id']
-            if hostgroup_id:
-                hostgroup = self._get_hostgroup_by_id(hostgroup_id)
-                ancestry_path = hostgroup.get('ancestry', '')
-                ancestry = ancestry_path.split('/') if ancestry_path is not None else []
-
-                # Append top level hostgroup last to overwrite lower levels
-                # values
-                ancestry.append(hostgroup_id)
-                paramgroups = [self._get_hostgroup_by_id(hostgroup_id)['parameters']
-                               for hostgroup_id in ancestry]
-
-        paramgroups += [self._get_params_by_id(host['id'])]
-        for paramgroup in paramgroups:
-            for param in paramgroup:
-                name = param['name']
-                params[name] = param['value']
+        for param in self._get_all_params_by_id(host['id']):
+            name = param['name']
+            params[name] = param['value']
 
         return params
 
