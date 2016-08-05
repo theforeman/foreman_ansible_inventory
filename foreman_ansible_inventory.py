@@ -68,8 +68,10 @@ class ForemanInventory(object):
                 self.inventory['_meta']['hostvars'][hostname] = {
                     'foreman': self.cache[hostname],
                     'foreman_params': self.params[hostname],
-                    'foreman_facts': self.facts[hostname],
                 }
+                if self.want_facts:
+                    self.inventory['_meta']['hostvars'][hostname]['foreman_facts'] = self.facts[hostname]
+
             data_to_print += self.json_format_dict(self.inventory, True)
 
         print(data_to_print)
@@ -120,6 +122,11 @@ class ForemanInventory(object):
             self.group_prefix = config.get('ansible', 'group_prefix')
         except (ConfigParser.NoOptionError, ConfigParser.NoSectionError):
             self.group_prefix = "foreman_"
+
+        try:
+            self.want_facts = config.getboolean('ansible', 'want_facts')
+        except (ConfigParser.NoOptionError, ConfigParser.NoSectionError):
+            self.want_facts = True
 
         # Cache related
         try:
@@ -200,6 +207,9 @@ class ForemanInventory(object):
         """
         Fetch all host facts of the host
         """
+        if not self.want_facts:
+            return {}
+
         ret = self._get_facts_by_id(host['id'])
         if len(ret.values()) == 0:
             facts = {}
@@ -293,7 +303,8 @@ class ForemanInventory(object):
 
     def load_facts_from_cache(self):
         """ Reads the index from the cache file sets self.index """
-
+        if not self.want_facts:
+            return
         cache = open(self.cache_path_facts, 'r')
         json_facts = cache.read()
         self.facts = json.loads(json_facts)
