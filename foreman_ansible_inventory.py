@@ -336,5 +336,6 @@ class ForemanInventory(object):
         else:
             return json.dumps(data)
 
-ForemanInventory()
+if __name__ == '__main__':
+  ForemanInventory()
 
