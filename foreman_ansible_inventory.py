@@ -234,6 +234,12 @@ class ForemanInventory(object):
                 if val:
                     safe_key = self.to_safe('%s%s_%s' % (self.group_prefix, group, val.lower()))
                     self.push(self.inventory, safe_key, dns_name)
+                    
+            for group in ['lifecycle_environment', 'content_view']:
+                val = host.get('content_facet_attributes', {}).get('%s_name' % group)
+                if val:
+                    safe_key = self.to_safe('%s%s_%s' % (self.group_prefix, group, val.lower()))
+                    self.push(self.inventory, safe_key, dns_name)
 
             params = self._resolve_params(host)
 
