@@ -58,9 +58,10 @@ The inventory will provide a set of groups, by default prefixed by
 group_prefix option in /etc/ansible/foreman.ini. The rest of this
 guide will assume the default prefix of 'foreman'
 
-The hostgroup, location and organization of each host are created as
-Ansible groups with a foreman_<grouptype> prefix, all lowercase and
-problematic parameters removed. So e.g. the foreman hostgroup
+The hostgroup, location, organization, content view, and lifecycle
+environment of each host are created as Ansible groups with a 
+foreman_<grouptype> prefix, all lowercase and problematic parameters 
+removed. So e.g. the foreman hostgroup
 
     myapp / webtier / datacenter1
 
