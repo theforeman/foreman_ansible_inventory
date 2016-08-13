@@ -167,10 +167,13 @@ class ForemanInventory(object):
                 break
             ret.raise_for_status()
             json = ret.json()
+            # /hosts/:id has not results key
             if not json.has_key('results'):
                 return json
+            # Facts are returned as dict in results not list
             if type(json['results']) == type({}):
                 return json['results']
+            # List of all hosts is returned paginaged
             results = results + json['results']
             if len(results) >= json['total']:
                 break
