@@ -336,8 +336,15 @@ class ForemanInventory(object):
         cache.write(json_data)
         cache.close()
 
-    def to_safe(self, word):
-        ''' Converts 'bad' characters in a string to underscores so they can be used as Ansible groups '''
+    @staticmethod
+    def to_safe(word):
+        '''
+        Converts 'bad' characters in a string to underscores so
+        they can be used as Ansible groups
+
+        >>> ForemanInventory.to_safe("foo-bar baz")
+        'foo_barbaz'
+        '''
         regex = "[^A-Za-z0-9\_]"
         return re.sub(regex, "_", word.replace(" ", ""))
 
