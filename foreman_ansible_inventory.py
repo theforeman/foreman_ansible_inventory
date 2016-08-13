@@ -37,16 +37,22 @@ class ForemanInventory(object):
     def __init__(self):
         """ Main execution path """
         self.inventory = dict()  # A list of groups and the hosts in that group
-        self.cache = dict()  # Details about hosts in the inventory
-        self.params = dict() # Params of each host
-        self.facts = dict() # Facts of each host
+        self.cache = dict()   # Details about hosts in the inventory
+        self.params = dict()  # Params of each host
+        self.facts = dict()   # Facts of each host
         self.hostgroups = dict()  # host groups
 
+    def run(self):
+        self._read_settings()
+        self._get_inventory()
+        self._print_data()
+
+    def _read_settings(self):
         # Read settings and parse CLI arguments
         self.read_settings()
         self.parse_cli_args()
 
-        # Cache
+    def _get_inventory(self):
         if self.args.refresh_cache:
             self.update_cache()
         elif not self.is_cache_valid():
@@ -57,9 +63,8 @@ class ForemanInventory(object):
             self.load_facts_from_cache()
             self.load_cache_from_cache()
 
+    def _print_data(self):
         data_to_print = ""
-
-        # Data to print
         if self.args.host:
             data_to_print += self.get_host_info()
         else:
@@ -264,7 +269,9 @@ class ForemanInventory(object):
             self.params[dns_name] = params
             self.facts[dns_name] = self._get_facts(host)
             self.push(self.inventory, 'all', dns_name)
+            self._write_cache()
 
+    def _write_cache(self):
         self.write_to_cache(self.cache, self.cache_path_cache)
         self.write_to_cache(self.inventory, self.cache_path_inventory)
         self.write_to_cache(self.params, self.cache_path_params)
@@ -343,5 +350,5 @@ class ForemanInventory(object):
             return json.dumps(data)
 
 if __name__ == '__main__':
-  ForemanInventory()
-
+    inv = ForemanInventory()
+    inv.run()
