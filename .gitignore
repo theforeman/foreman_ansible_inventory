@@ -2,6 +2,9 @@
 *.index
 *.cache
 *.params
+*.facts
+*.pyc
+.tox/
 build/
 dist/
 *.egg-info/

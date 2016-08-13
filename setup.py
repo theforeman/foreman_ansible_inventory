@@ -35,4 +35,5 @@ setup(name = "foreman_ansible_inventory",
       ],
       scripts = ['foreman_ansible_inventory.py'],
       requires = ["requests"],
+      tests_require=['responses'],
 )
