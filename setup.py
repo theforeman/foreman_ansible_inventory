@@ -18,22 +18,20 @@
 #
 # END OF COPYRIGHT #
 
-import subprocess
-from setuptools import setup, find_packages
-import os
+from setuptools import setup
 
-setup(name = "foreman_ansible_inventory",
-      version = "0.0.3",
-      author = u'Guido Günther',
-      author_email = 'agx@sigxcpu.org',
-      description = 'Ansible dynamic inventory that queries the Foreman',
-      license = 'GPLv3+',
-      classifiers = [
+setup(name="foreman_ansible_inventory",
+      version="0.0.3",
+      author=u'Guido Günther',
+      author_email='agx@sigxcpu.org',
+      description='Ansible dynamic inventory that queries the Foreman',
+      license='GPLv3+',
+      classifiers=[
           'Environment :: Console',
           'Programming Language :: Python :: 2',
           'Operating System :: POSIX :: Linux',
       ],
-      scripts = ['foreman_ansible_inventory.py'],
-      requires = ["requests"],
+      scripts=['foreman_ansible_inventory.py'],
+      requires=["requests"],
       tests_require=['responses'],
-)
+      )
