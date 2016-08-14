@@ -23,9 +23,9 @@ import ConfigParser
 import copy
 import os
 import re
-from time import time
 import requests
 from requests.auth import HTTPBasicAuth
+from time import time
 
 try:
     import json
@@ -35,7 +35,6 @@ except ImportError:
 
 class ForemanInventory(object):
     def __init__(self):
-        """ Main execution path """
         self.inventory = dict()  # A list of groups and the hosts in that group
         self.cache = dict()   # Details about hosts in the inventory
         self.params = dict()  # Params of each host
@@ -82,20 +81,19 @@ class ForemanInventory(object):
         print(data_to_print)
 
     def is_cache_valid(self):
-        """ Determines if the cache files have expired, or if it is still valid """
-
+        """Determines if the cache is still valid"""
         if os.path.isfile(self.cache_path_cache):
             mod_time = os.path.getmtime(self.cache_path_cache)
             current_time = time()
             if (mod_time + self.cache_max_age) > current_time:
                 if (os.path.isfile(self.cache_path_inventory) and
                     os.path.isfile(self.cache_path_params) and
-                    os.path.isfile(self.cache_path_facts)):
+                        os.path.isfile(self.cache_path_facts)):
                     return True
         return False
 
     def read_settings(self):
-        """ Reads the settings from the foreman.ini file """
+        """Reads the settings from the foreman.ini file"""
 
         config = ConfigParser.SafeConfigParser()
         config_paths = [
@@ -146,7 +144,7 @@ class ForemanInventory(object):
         self.cache_max_age = config.getint('cache', 'max_age')
 
     def parse_cli_args(self):
-        """ Command line argument processing """
+        """Command line argument processing"""
 
         parser = argparse.ArgumentParser(description='Produce an Ansible Inventory file based on foreman')
         parser.add_argument('--list', action='store_true', default=True, help='List instances (default: True)')
@@ -168,10 +166,10 @@ class ForemanInventory(object):
             ret.raise_for_status()
             json = ret.json()
             # /hosts/:id has not results key
-            if not json.has_key('results'):
+            if 'results' not in json:
                 return json
             # Facts are returned as dict in results not list
-            if type(json['results']) == type({}):
+            if isinstance(json['results'], dict):
                 return json['results']
             # List of all hosts is returned paginaged
             results = results + json['results']
@@ -192,7 +190,8 @@ class ForemanInventory(object):
     def _get_all_params_by_id(self, hid):
         url = "%s/api/v2/hosts/%s" % (self.foreman_url, hid)
         ret = self._get_json(url, [404])
-        if ret == []: ret = {}
+        if ret == []:
+            ret = {}
         return ret.get('all_parameters', {})
 
     def _get_facts_by_id(self, hid):
@@ -200,9 +199,7 @@ class ForemanInventory(object):
         return self._get_json(url)
 
     def _resolve_params(self, host):
-        """
-        Fetch host params and convert to dict
-        """
+        """Fetch host params and convert to dict"""
         params = {}
 
         for param in self._get_all_params_by_id(host['id']):
@@ -212,9 +209,7 @@ class ForemanInventory(object):
         return params
 
     def _get_facts(self, host):
-        """
-        Fetch all host facts of the host
-        """
+        """Fetch all host facts of the host"""
         if not self.want_facts:
             return {}
 
@@ -242,7 +237,7 @@ class ForemanInventory(object):
                 if val:
                     safe_key = self.to_safe('%s%s_%s' % (self.group_prefix, group, val.lower()))
                     self.push(self.inventory, safe_key, dns_name)
-                    
+
             for group in ['lifecycle_environment', 'content_view']:
                 val = host.get('content_facet_attributes', {}).get('%s_name' % group)
                 if val:
@@ -281,7 +276,7 @@ class ForemanInventory(object):
         self.write_to_cache(self.facts, self.cache_path_facts)
 
     def get_host_info(self):
-        """ Get variables about a specific host """
+        """Get variables about a specific host"""
 
         if not self.cache or len(self.cache) == 0:
             # Need to load index from cache
@@ -304,21 +299,21 @@ class ForemanInventory(object):
             d[k] = [v]
 
     def load_inventory_from_cache(self):
-        """ Reads the index from the cache file sets self.index """
+        """Read the index from the cache file sets self.index"""
 
         cache = open(self.cache_path_inventory, 'r')
         json_inventory = cache.read()
         self.inventory = json.loads(json_inventory)
 
     def load_params_from_cache(self):
-        """ Reads the index from the cache file sets self.index """
+        """Read the index from the cache file sets self.index"""
 
         cache = open(self.cache_path_params, 'r')
         json_params = cache.read()
         self.params = json.loads(json_params)
 
     def load_facts_from_cache(self):
-        """ Reads the index from the cache file sets self.index """
+        """Read the index from the cache file sets self.facts"""
         if not self.want_facts:
             return
         cache = open(self.cache_path_facts, 'r')
@@ -326,14 +321,14 @@ class ForemanInventory(object):
         self.facts = json.loads(json_facts)
 
     def load_cache_from_cache(self):
-        """ Reads the cache from the cache file sets self.cache """
+        """Read the cache from the cache file sets self.cache"""
 
         cache = open(self.cache_path_cache, 'r')
         json_cache = cache.read()
         self.cache = json.loads(json_cache)
 
     def write_to_cache(self, data, filename):
-        """ Writes data in JSON format to a file """
+        """Write data in JSON format to a file"""
         json_data = self.json_format_dict(data, True)
         cache = open(filename, 'w')
         cache.write(json_data)
@@ -341,9 +336,9 @@ class ForemanInventory(object):
 
     @staticmethod
     def to_safe(word):
-        '''
-        Converts 'bad' characters in a string to underscores so
-        they can be used as Ansible groups
+        '''Converts 'bad' characters in a string to underscores
+
+        so they can be used as Ansible groups
 
         >>> ForemanInventory.to_safe("foo-bar baz")
         'foo_barbaz'
@@ -352,7 +347,7 @@ class ForemanInventory(object):
         return re.sub(regex, "_", word.replace(" ", ""))
 
     def json_format_dict(self, data, pretty=False):
-        """ Converts a dict to a JSON object and dumps it as a formatted string """
+        """Converts a dict to a JSON object and dumps it as a formatted string"""
 
         if pretty:
             return json.dumps(data, sort_keys=True, indent=2)
