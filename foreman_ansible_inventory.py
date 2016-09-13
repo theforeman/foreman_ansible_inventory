@@ -18,6 +18,8 @@
 #
 # This is somewhat based on cobbler inventory
 
+from __future__ import print_function
+
 import argparse
 import ConfigParser
 import copy
@@ -25,6 +27,7 @@ import os
 import re
 import requests
 from requests.auth import HTTPBasicAuth
+import sys
 from time import time
 
 try:
@@ -176,6 +179,11 @@ class ForemanInventory(object):
             if len(results) >= json['total']:
                 break
             page += 1
+            if len(json['results']) == 0:
+                print("Did not make any progress during loop. "
+                      "expected %d got %d" % (json['total'], len(results)),
+                      file=sys.stderr)
+                break
         return results
 
     def _get_hosts(self):
