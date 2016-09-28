@@ -37,6 +37,11 @@ except ImportError:
 
 
 class ForemanInventory(object):
+    config_paths = [
+        "/etc/ansible/foreman.ini",
+        os.path.dirname(os.path.realpath(__file__)) + '/foreman.ini',
+    ]
+
     def __init__(self):
         self.inventory = dict()  # A list of groups and the hosts in that group
         self.cache = dict()   # Details about hosts in the inventory
@@ -45,14 +50,18 @@ class ForemanInventory(object):
         self.hostgroups = dict()  # host groups
 
     def run(self):
-        self._read_settings()
+        if not self._read_settings():
+            return False
         self._get_inventory()
         self._print_data()
+        return True
 
     def _read_settings(self):
         # Read settings and parse CLI arguments
-        self.read_settings()
+        if not self.read_settings():
+            return False
         self.parse_cli_args()
+        return True
 
     def _get_inventory(self):
         if self.args.refresh_cache:
@@ -99,22 +108,21 @@ class ForemanInventory(object):
         """Reads the settings from the foreman.ini file"""
 
         config = ConfigParser.SafeConfigParser()
-        config_paths = [
-            "/etc/ansible/foreman.ini",
-            os.path.dirname(os.path.realpath(__file__)) + '/foreman.ini',
-        ]
-
         env_value = os.environ.get('FOREMAN_INI_PATH')
         if env_value is not None:
-            config_paths.append(os.path.expanduser(os.path.expandvars(env_value)))
+            self.config_paths.append(os.path.expanduser(os.path.expandvars(env_value)))
 
-        config.read(config_paths)
+        config.read(self.config_paths)
 
         # Foreman API related
-        self.foreman_url = config.get('foreman', 'url')
-        self.foreman_user = config.get('foreman', 'user')
-        self.foreman_pw = config.get('foreman', 'password')
-        self.foreman_ssl_verify = config.getboolean('foreman', 'ssl_verify')
+        try:
+            self.foreman_url = config.get('foreman', 'url')
+            self.foreman_user = config.get('foreman', 'user')
+            self.foreman_pw = config.get('foreman', 'password')
+            self.foreman_ssl_verify = config.getboolean('foreman', 'ssl_verify')
+        except (ConfigParser.NoOptionError, ConfigParser.NoSectionError) as e:
+            print("Error parsing configuration: %s" % e, file=sys.stderr)
+            return False
 
         # Ansible related
         try:
@@ -144,7 +152,11 @@ class ForemanInventory(object):
         self.cache_path_inventory = cache_path + "/%s.index" % script
         self.cache_path_params = cache_path + "/%s.params" % script
         self.cache_path_facts = cache_path + "/%s.facts" % script
-        self.cache_max_age = config.getint('cache', 'max_age')
+        try:
+            self.cache_max_age = config.getint('cache', 'max_age')
+        except (ConfigParser.NoOptionError, ConfigParser.NoSectionError):
+            self.cache_max_age = 60
+        return True
 
     def parse_cli_args(self):
         """Command line argument processing"""
@@ -364,4 +376,4 @@ class ForemanInventory(object):
 
 if __name__ == '__main__':
     inv = ForemanInventory()
-    inv.run()
+    sys.exit(not inv.run())
