@@ -1,3 +1,4 @@
 nose
 requests
 responses
+flake8>=3
