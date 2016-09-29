@@ -21,7 +21,7 @@
 from setuptools import setup
 
 setup(name="foreman_ansible_inventory",
-      version="0.0.3",
+      version="0.0.4",
       author=u'Guido Günther',
       author_email='agx@sigxcpu.org',
       description='Ansible dynamic inventory that queries the Foreman',
