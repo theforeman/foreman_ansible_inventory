@@ -2,6 +2,7 @@ foreman_ansible_inventory
 =========================
 
 [![Build Status](https://travis-ci.org/theforeman/foreman_ansible_inventory.svg?branch=master)](https://travis-ci.org/theforeman/foreman_ansible_inventory)
+[![PyPI version](https://badge.fury.io/py/foreman_ansible_inventory.svg)](https://badge.fury.io/py/foreman_ansible_inventory)
 
 This script can be used as an Ansible dynamic inventory[1].
 The connection parameters are set up via a configuration
