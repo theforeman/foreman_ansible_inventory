@@ -20,7 +20,7 @@ class TestReadSettings(unittest.TestCase):
         self.assertFalse(self.inv.read_settings())
 
     def test_parse_params(self):
-        with tempfile.NamedTemporaryFile() as t:
+        with tempfile.NamedTemporaryFile(mode='w+') as t:
             print("""
 [foreman]
 url=http://127.0.0.1
