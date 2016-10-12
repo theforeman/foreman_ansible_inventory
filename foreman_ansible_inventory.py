@@ -256,8 +256,14 @@ class ForemanInventory(object):
         for host in self._get_hosts():
             dns_name = host['name']
 
-            # Create ansible groups for hostgroup, environment, location and organization
-            for group in ['hostgroup', 'environment', 'location', 'organization']:
+            # Create ansible groups for hostgroup
+            val = host.get('hostgroup_title') or host.get('hostgroup_name')
+            if val:
+                safe_key = self.to_safe('%s%s_%s' % (self.group_prefix, 'hostgroup', val.lower()))
+                self.push(self.inventory, safe_key, dns_name)
+
+            # Create ansible groups for environment, location and organization
+            for group in ['environment', 'location', 'organization']:
                 val = host.get('%s_name' % group)
                 if val:
                     safe_key = self.to_safe('%s%s_%s' % (self.group_prefix, group, val.lower()))
