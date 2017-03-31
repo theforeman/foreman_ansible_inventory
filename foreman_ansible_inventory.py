@@ -153,11 +153,14 @@ class ForemanInventory(object):
             cache_path = os.path.expanduser(config.get('cache', 'path'))
         except (ConfigParser.NoOptionError, ConfigParser.NoSectionError):
             cache_path = '.'
-        (script, ext) = os.path.splitext(os.path.basename(__file__))
-        self.cache_path_cache = cache_path + "/%s.cache" % script
-        self.cache_path_inventory = cache_path + "/%s.index" % script
-        self.cache_path_params = cache_path + "/%s.params" % script
-        self.cache_path_facts = cache_path + "/%s.facts" % script
+        try:
+            cache_filename = os.path.expanduser(config.get('cache', 'filename'))
+        except (ConfigParser.NoOptionError, ConfigParser.NoSectionError):
+            (cache_filename, ext) = os.path.splitext(os.path.basename(__file__))
+        self.cache_path_cache = cache_path + "/%s.cache" % cache_filename
+        self.cache_path_inventory = cache_path + "/%s.index" % cache_filename
+        self.cache_path_params = cache_path + "/%s.params" % cache_filename
+        self.cache_path_facts = cache_path + "/%s.facts" % cache_filename
         try:
             self.cache_max_age = config.getint('cache', 'max_age')
         except (ConfigParser.NoOptionError, ConfigParser.NoSectionError):
