@@ -1,6 +1,8 @@
 foreman_ansible_inventory
 =========================
 
+> **WARNING**: This inventory is available by default with Ansible since version 2.2. Please submit any enhancements directly upstream to https://github.com/ansible/ansible/blob/devel/contrib/inventory/foreman.py
+
 [![Build Status](https://travis-ci.org/theforeman/foreman_ansible_inventory.svg?branch=master)](https://travis-ci.org/theforeman/foreman_ansible_inventory)
 [![PyPI version](https://badge.fury.io/py/foreman_ansible_inventory.svg)](https://badge.fury.io/py/foreman_ansible_inventory)
 
